@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	logFile, err := os.OpenFile("app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logFile, err := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		log.Fatal("Failed to open log file:", err)
 	}
@@ -23,6 +23,8 @@ func main() {
 	router := gin.Default()
 	router.POST("/insertrecord", handlers.Insertrecord)
 	router.GET("/listmovies", handlers.Listmovies)
+	router.DELETE("/deleterecord/:year/:genre", handlers.Deleterecord)
+	router.PATCH("/updaterecord", handlers.Updaterecord)
 	router.Run()
 }
 func init() {

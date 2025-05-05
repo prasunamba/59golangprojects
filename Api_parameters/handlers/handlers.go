@@ -3,9 +3,9 @@ package handlers
 import (
 	"example/Api_parameters/database"
 	"example/Api_parameters/models"
-	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -35,5 +35,57 @@ func Insertrecord(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	fmt.Println("record inserted successfully")
+	log.Println("record inserted successfully")
+}
+func Deleterecord(c *gin.Context) {
+	stryear := c.Param("year")
+	year, _ := strconv.Atoi(stryear)
+	genre := c.Param("genre")
+	var movie models.Movie
+	log.Println("year & genre", stryear, genre)
+	result := database.DB.Where("year=? AND genre = ?", year, genre).First(&movie)
+	if result.Error != nil {
+		log.Fatal("record not found")
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "record not found",
+		})
+		return
+	}
+	if err := database.DB.Delete(&movie).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "failed to delete the reccord",
+		})
+		return
+	}
+	log.Println("successfully deleted the record")
+}
+func Updaterecord(c *gin.Context) {
+	name := c.Query("name")
+	if name == "" {
+		c.JSON(400, gin.H{"error": "Missing 'name' query param"})
+		return
+	}
+
+	updates := map[string]interface{}{}
+	if yearStr := c.Query("year"); yearStr != "" {
+		year, err := strconv.Atoi(yearStr)
+		if err == nil {
+			updates["year"] = year
+		}
+	}
+	if genre := c.Query("genre"); genre != "" {
+		updates["genre"] = genre
+	}
+	if len(updates) == 0 {
+		c.JSON(400, gin.H{"error": "No fields provided for update"})
+		return
+	}
+	result := database.DB.Model(&models.Movie{}).Where("name = ?", name).Updates(updates)
+
+	if result.RowsAffected == 0 {
+		c.JSON(404, gin.H{"error": "Movie not found or nothing updated"})
+		return
+	}
+	log.Println("record updated successfully")
+	c.JSON(200, gin.H{"message": "Movie updated", "updates": updates})
 }

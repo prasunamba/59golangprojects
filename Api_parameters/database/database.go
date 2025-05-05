@@ -2,7 +2,6 @@ package database
 
 import (
 	"example/Api_parameters/models"
-	"fmt"
 	"log"
 
 	"gorm.io/driver/mysql"
@@ -22,5 +21,5 @@ func Database_connection() {
 	if err != nil {
 		log.Fatal("failed to create table")
 	}
-	fmt.Println("successfully create table")
+	log.Println("successfully created table")
 }
